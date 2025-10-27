@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Receipt #{{ sale.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+  <h1 class="text-2xl font-bold text-center mb-4">Receipt #{{ sale.id }}</h1>
+  <p class="text-center text-gray-600">Date: {{ sale.date }}</p>
+  <p class="text-center text-gray-600 mb-6">Customer: {{ sale.customer_name }}</p>
+
+  <table class="w-full mb-6">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2 text-left">Item</th>
+        <th class="p-2 text-right">Qty</th>
+        <th class="p-2 text-right">Price</th>
+        <th class="p-2 text-right">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in sale['items'] %}  <!-- ← CHANGED: sale['items'] -->
+      <tr class="border-b">
+        <td class="p-2">{{ item.product_name }}</td>
+        <td class="p-2 text-right">{{ item.quantity }}</td>
+        <td class="p-2 text-right">$ {{ "%.2f"|format(item.price) }}</td>
+        <td class="p-2 text-right">$ {{ "%.2f"|format(item.subtotal) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="text-xl font-bold text-right">Total: $ {{ "%.2f"|format(sale.total) }}</p>
+
+  <div class="text-center mt-6">
+    <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded">Print</button>
+  </div>
+</div>
+{% endblock %}

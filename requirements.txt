@@ -1,0 +1,4 @@
+﻿Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+pymysql==1.1.0
+Werkzeug==3.0.3

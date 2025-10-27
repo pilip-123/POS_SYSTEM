@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Sales Reports</h1>
+
+<div class="bg-white p-6 rounded-lg shadow mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    <input type="date" id="from-date" value="{{ from_date }}" class="border rounded p-2 focus:ring-2 focus:ring-blue-500">
+    <input type="date" id="to-date" value="{{ to_date }}" class="border rounded p-2 focus:ring-2 focus:ring-blue-500">
+    <select id="product-filter" class="border rounded p- 2 focus:ring-2 focus:ring-blue-500">
+      <option value="">All Products</option>
+      {% for p in products %}
+      <option value="{{ p.id }}" {% if selected_product == p.id|string %}selected{% endif %}>{{ p.name }}</option>
+      {% endfor %}
+    </select>
+    <button id="apply-filter" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Apply Filter</button>
+  </div>
+</div>
+
+<p class="text-2xl font-bold mb-4" id="total-income">$ {{ "%.2f"|format(total_income) }}</p>
+
+<h2 class="text-xl font-semibold mb-3">Product Breakdown</h2>
+<table class="w-full bordered mb-8">
+  <thead class="bg-gray-200">
+    <tr>
+      <th class="p-3 text-left">Product</th>
+      <th class="p-3 text-right">Qty Sold</th>
+      <th class="p-3 text-right">Revenue</th>
+    </tr>
+  </thead>
+  <tbody id="product-body">
+    {% for row in product_sales %}
+    <tr class="border-b">
+      <td class="p-3">{{ row[0] }}</td>
+      <td class="p-3 text-right">{{ row[1]|default(0) }}</td>
+      <td class="p-3 text-right">$ {{ "%.2f"|format(row[2]|default(0)) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2 class="text-xl font-semibold mb-3">Sales List</h2>
+<table class="w-full bordered">
+  <thead class="bg-gray-200">
+    <tr>
+      <th class="p-3">ID</th>
+      <th class="p-3">Date</th>
+      <th class="p-3">Customer</th>
+      <th class="p-3 text-right">Total</th>
+    </tr>
+  </thead>
+  <tbody id="sales-body">
+    {% for sale in sales %}
+    <tr class="border-b">
+      <td class="p-3">#{{ sale.id }}</td>
+      <td class="p-3">{{ sale.date }}</td>                  <!-- FIXED: date -->
+      <td class="p-3">{{ sale.customer_name }}</td>         <!-- FIXED: customer -->
+      <td class="p-3 text-right font-semibold">$ {{ "%.2f"|format(sale.total) }}</td>
+    </tr>
+
+    <!-- Show items under sale -->
+    {% if sale['items'] %}
+    <tr class="bg-gray-50">
+      <td colspan="4" class="p-0">
+        <table class="w-full text-sm">
+          <tbody>
+            {% for item in sale['items'] %}
+            <tr>
+              <td class="pl-8 py-1">{{ item.product_name }}</td>
+              <td class="text-center py-1">{{ item.quantity }}</td>
+              <td class="text-right pr-8 py-1">$ {{ "%.2f"|format(item.subtotal) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+  const applyBtn = document.getElementById('apply-filter');
+  const fromInput = document.getElementById('from-date');
+  const toInput = document.getElementById('to-date');
+  const productSelect = document.getElementById('product-filter');
+  const totalEl = document.getElementById('total-income');
+  const productBody = document.getElementById('product-body');
+  const salesBody = document.getElementById('sales-body');
+
+  async function loadReports() {
+    const params = new URLSearchParams({
+      from_date: fromInput.value,
+      to_date: toInput.value,
+      product_id: productSelect.value
+    });
+    const res = await fetch(`/reports?${params}`);
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    totalEl.textContent = doc.querySelector('#total-income').textContent;
+    productBody.innerHTML = doc.querySelector('#product-body').innerHTML;
+    salesBody.innerHTML = doc.querySelector('#sales-body').innerHTML;
+  }
+
+  applyBtn.onclick = loadReports;
+  [fromInput, toInput, productSelect].forEach(el => el.onchange = loadReports);
+</script>
+{% endblock %}

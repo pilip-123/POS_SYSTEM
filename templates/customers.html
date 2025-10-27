@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-3xl font-bold text-gray-800">Customers</h1>
+  <button id="open-add-modal" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Customer</button>
+</div>
+
+<div id="customers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+<dialog id="customer-modal">
+  <form id="customer-form" class="space-y-4 p-4">
+    <input type="hidden" id="customer-id">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+      <input id="customer-name" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+      <input id="customer-email" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+      <input id="customer-phone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+    <div class="flex justify-end gap-2">
+      <button type="button" id="cancel-modal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  const modal = document.getElementById('customer-modal');
+  const form = document.getElementById('customer-form');
+  const grid = document.getElementById('customers-grid');
+  const openAdd = document.getElementById('open-add-modal');
+  const cancel = document.getElementById('cancel-modal');
+
+  async function loadCustomers() {
+    const res = await fetch('/api/customers');
+    const custs = await res.json();
+    grid.innerHTML = '';
+    custs.forEach(c => grid.appendChild(createCard(c)));
+  }
+
+  function createCard(c) {
+    const div = document.createElement('div');
+    div.className = 'card bg-white rounded-xl shadow-md p-6 animate-scale-in';
+    div.dataset.id = c.id;
+    div.innerHTML = `
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">${c.name}</h3>
+      <p class="text-sm text-gray-600 mb-1">Email: ${c.email || 'N/A'}</p>
+      <p class="text-sm text-gray-600 mb-4">Phone: ${c.phone || 'N/A'}</p>
+      <div class="flex gap-2">
+        <button data-id="${c.id}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded flex-1 hover:bg-yellow-600">Edit</button>
+        <button data-id="${c.id}" class="delete-btn bg-red-600 text-white px-3 py-1 rounded flex-1 hover:bg-red-700">Delete</button>
+      </div>
+    `;
+    return div;
+  }
+
+  openAdd.onclick = () => { form.reset(); document.getElementById('customer-id').value = ''; modal.showModal(); };
+  cancel.onclick = () => modal.close();
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const id = document.getElementById('customer-id').value;
+    const data = {
+      name: document.getElementById('customer-name').value,
+      email: document.getElementById('customer-email').value,
+      phone: document.getElementById('customer-phone').value
+    };
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/customers/${id}` : '/api/customers';
+    const res = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+    if (res.ok) {
+      const c = await res.json();
+      if (id) {
+        const card = grid.querySelector(`[data-id="${id}"]`);
+        card.querySelector('h3').textContent = c.name;
+        card.querySelectorAll('p')[0].innerHTML = `Email: ${c.email || 'N/A'}`;
+        card.querySelectorAll('p')[1].innerHTML = `Phone: ${c.phone || 'N/A'}`;
+      } else {
+        grid.appendChild(createCard(c));
+      }
+      modal.close();
+    }
+  };
+
+  grid.addEventListener('click', async e => {
+    const btn = e.target;
+    const id = btn.dataset.id;
+    const card = btn.closest('[data-id]');
+    if (btn.classList.contains('edit-btn')) {
+      const res = await fetch(`/api/customers/${id}`);
+      const c = await res.json();
+      document.getElementById('customer-id').value = c.id;
+      document.getElementById('customer-name').value = c.name;
+      document.getElementById('customer-email').value = c.email;
+      document.getElementById('customer-phone').value = c.phone;
+      modal.showModal();
+    } else if (btn.classList.contains('delete-btn')) {
+      if (confirm('Delete this customer?')) {
+        await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+        card.remove();
+      }
+    }
+  });
+
+  loadCustomers();
+</script>
+{% endblock %}

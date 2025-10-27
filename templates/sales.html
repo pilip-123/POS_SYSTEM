@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Sales History{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Sales History</h1>
+
+<div class="bg-white rounded-xl shadow overflow-hidden">
+  <table class="w-full">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-3 text-left">ID</th>
+        <th class="p-3 text-left">Customer</th>
+        <th class="p-3 text-right">Total</th>
+        <th class="p-3 text-center">Date</th>
+        <th class="p-3 text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in sales %}
+      <tr class="border-b hover:bg-gray-50">
+        <td class="p-3">#{{ sale.id }}</td>
+        <td class="p-3">{{ sale.customer_name }}</td>
+        <td class="p-3 text-right font-semibold">$ {{ "%.2f"|format(sale.total) }}</td>
+        <td class="p-3 text-center text-sm text-gray-600">{{ sale.date }}</td>
+        <td class="p-3 text-center">
+          <a href="{{ url_for('receipt', sid=sale.id) }}" class="text-blue-600 hover:underline">View Receipt</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

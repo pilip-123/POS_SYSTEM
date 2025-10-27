@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Billing{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Billing</h1>
+
+<div class="grid lg:grid-cols-2 gap-8">
+  <!-- Products -->
+  <div>
+    <h2 class="text-2xl font-semibold mb-4">Products</h2>
+    <div id="products-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </div>
+
+  <!-- Cart -->
+  <div>
+    <h2 class="text-2xl font-semibold mb-4">Cart</h2>
+    <table class="w-full border-collapse mb-4">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2 text-left">Product</th>
+          <th class="p-2 text-center">Qty</th>
+          <th class="p-2 text-right">Subtotal</th>
+          <th class="p-2"></th>
+        </tr>
+      </thead>
+      <tbody id="cart-body"></tbody>
+    </table>
+    <p class="text-xl font-bold text-right mb-4" id="cart-total">$0.00</p>
+
+    <select id="customer-select" class="border rounded p-2 w-full mb-4">
+      <option value="">Guest</option>
+    </select>
+
+    <button id="confirm-sale" class="bg-green-600 text-white w-full py-3 rounded hover:bg-green-700 text-lg font-semibold">
+      Confirm Sale
+    </button>
+  </div>
+</div>
+
+<script>
+  let cart = [];
+  const productsList = document.getElementById('products-list');
+  const cartBody = document.getElementById('cart-body');
+  const cartTotal = document.getElementById('cart-total');
+  const customerSelect = document.getElementById('customer-select');
+
+  async function loadData() {
+    const [prodRes, custRes] = await Promise.all([
+      fetch('/api/products'),
+      fetch('/api/customers')
+    ]);
+    const products = await prodRes.json();
+    const customers = await custRes.json();
+
+    productsList.innerHTML = '';
+    products.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'card bg-white rounded-lg shadow-md p-4 flex flex-col justify-between animate-scale-in';
+
+      div.innerHTML = `
+        <div class="flex gap-3">
+          <!-- Product Image -->
+          <img 
+            src="${p.image_url}" 
+            alt="${p.name}" 
+            class="w-20 h-20 object-cover rounded-lg shadow-sm"
+            onerror="this.src='/static/no-image.png'"
+          >
+          
+          <!-- Product Info -->
+          <div class="flex-1">
+            <h3 class="font-semibold text-lg text-gray-800">${p.name}</h3>
+            <p class="text-green-600 font-bold">$${p.price.toFixed(2)}</p>
+            <p class="text-sm text-gray-600">Stock: <span class="font-medium">${p.stock}</span></p>
+          </div>
+        </div>
+
+        <!-- Add to Cart -->
+        <div class="mt-4 flex gap-2 items-center">
+          <input 
+            type="number" 
+            id="qty-${p.id}" 
+            min="1" 
+            max="${p.stock}" 
+            class="border rounded px-2 py-1 w-20 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="Qty"
+          >
+          <button 
+            class="add-to-cart bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 flex-1"
+            data-id="${p.id}"
+            data-name="${p.name}"
+            data-price="${p.price}"
+            data-stock="${p.stock}"
+          >
+            Add
+          </button>
+        </div>
+      `;
+      productsList.appendChild(div);
+    });
+
+    // Populate customers
+    customers.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      customerSelect.appendChild(opt);
+    });
+  }
+
+  function updateCart() {
+    cartBody.innerHTML = '';
+    let total = 0;
+
+    cart.forEach(item => {
+      const sub = item.price * item.qty;
+      total += sub;
+
+      const row = document.createElement('tr');
+      row.className = 'border-b hover:bg-gray-50 transition';
+      row.innerHTML = `
+        <td class="p-2 text-sm">${item.name}</td>
+        <td class="p-2 text-center text-sm">${item.qty}</td>
+        <td class="p-2 text-right text-sm font-medium">$${sub.toFixed(2)}</td>
+        <td class="p-2 text-center">
+          <button class="remove-btn text-red-600 hover:text-red-800 text-lg" data-id="${item.id}">X</button>
+        </td>
+      `;
+      cartBody.appendChild(row);
+    });
+
+    cartTotal.textContent = '$' + total.toFixed(2);
+  }
+
+  // Add to Cart
+  productsList.addEventListener('click', e => {
+    if (e.target.classList.contains('add-to-cart')) {
+      const btn = e.target;
+      const id = btn.dataset.id;
+      const qtyInput = document.getElementById(`qty-${id}`);
+      const qty = parseInt(qtyInput.value) || 0;
+
+      if (qty < 1 || qty > parseInt(btn.dataset.stock)) {
+        alert('Invalid quantity or out of stock!');
+        return;
+      }
+
+      const existing = cart.find(i => i.id === id);
+      if (existing) {
+        if (existing.qty + qty > parseInt(btn.dataset.stock)) {
+          alert('Not enough stock!');
+          return;
+        }
+        existing.qty += qty;
+      } else {
+        cart.push({
+          id,
+          name: btn.dataset.name,
+          price: parseFloat(btn.dataset.price),
+          qty
+        });
+      }
+
+      qtyInput.value = '';
+      updateCart();
+    }
+  });
+
+  // Remove from Cart
+  cartBody.addEventListener('click', e => {
+    if (e.target.classList.contains('remove-btn')) {
+      const id = e.target.dataset.id;
+      cart = cart.filter(i => i.id !== id);
+      updateCart();
+    }
+  });
+
+  // Confirm Sale
+  document.getElementById('confirm-sale').onclick = async () => {
+    if (cart.length === 0) {
+      alert('Your cart is empty!');
+      return;
+    }
+
+    const items = cart.map(i => ({
+      product_id: parseInt(i.id),
+      qty: i.qty
+    }));
+    const customer_id = customerSelect.value || null;
+
+    try {
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id, items })
+      });
+
+      if (res.ok) {
+        const { id } = await res.json();
+        cart = [];
+        updateCart();
+        window.location = `/receipt/${id}`;
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Sale failed!');
+      }
+    } catch (err) {
+      alert('Network error. Please try again.');
+    }
+  };
+
+  // Load data on page load
+  loadData();
+</script>
+{% endblock %}
