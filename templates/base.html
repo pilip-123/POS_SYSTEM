@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}POS System{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     .card { transition: all 0.3s ease; }
     .card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
@@ -12,33 +14,133 @@
     @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .animate-fade-in { animation: fadeIn 0.3s ease-out; }
     .animate-scale-in { animation: scaleIn 0.3s ease-out; }
-    dialog { max-width: 28rem; border: none; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-    dialog::backdrop { background: rgba(0,0,0,0.5); }
   </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-  <nav class="bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-lg">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <a href="{{ url_for('index') }}" class="text-2xl font-bold">POS System</a>
-      <div class="space-x-4">
-        <a href="{{ url_for('categories') }}" class="hover:underline">Categories</a>
-        <a href="{{ url_for('products') }}" class="hover:underline">Products</a>
-        <a href="{{ url_for('customers') }}" class="hover:underline">Customers</a>
-        <a href="{{ url_for('billing') }}" class="hover:underline">Billing</a>
-        <a href="{{ url_for('sales') }}" class="hover:underline">Sales</a>
-        <a href="{{ url_for('reports') }}" class="hover:underline">Reports</a>
+
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+      <a href="{{ url_for('index') }}" class="text-2xl font-bold tracking-wide">P_Control</a>
+      <div class="space-x-4 text-sm font-medium">
+        <a href="{{ url_for('categories') }}" class="hover:text-blue-200 transition">Categories</a>
+        <a href="{{ url_for('products') }}" class="hover:text-blue-200 transition">Products</a>
+        <a href="{{ url_for('customers') }}" class="hover:text-blue-200 transition">Customers</a>
+        <a href="{{ url_for('billing') }}" class="hover:text-blue-200 transition">Billing</a>
+        <a href="{{ url_for('sales') }}" class="hover:text-blue-200 transition">Sales</a>
+        <a href="{{ url_for('reports') }}" class="hover:text-blue-200 transition">Reports</a>
       </div>
     </div>
   </nav>
-  <div class="container mx-auto p-6">
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto px-6 py-8">
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6 animate-fade-in">
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6 animate-fade-in shadow-sm">
           {% for message in messages %}<p>{{ message }}</p>{% endfor %}
         </div>
       {% endif %}
     {% endwith %}
-    {% block content %}{% endblock %}
-  </div>
+
+    {% block content %}
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h1>
+
+    <!-- Cards Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="card bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl p-6 shadow-sm">
+        <h3 class="text-sm font-semibold opacity-90">Total Sales</h3>
+        <p class="text-3xl font-bold mt-2">$730,340</p>
+        <p class="text-xs opacity-80 mt-1">+15% from last week</p>
+      </div>
+      <div class="card bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl p-6 shadow-sm">
+        <h3 class="text-sm font-semibold opacity-90">Customers</h3>
+        <p class="text-3xl font-bold mt-2">138</p>
+        <p class="text-xs opacity-80 mt-1">+12 new customers</p>
+      </div>
+      <div class="card bg-gradient-to-r from-yellow-500 to-amber-400 text-white rounded-xl p-6 shadow-sm">
+        <h3 class="text-sm font-semibold opacity-90">Products Sold</h3>
+        <p class="text-3xl font-bold mt-2">1,129</p>
+        <p class="text-xs opacity-80 mt-1">Top-selling item: Car</p>
+      </div>
+      <div class="card bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-xl p-6 shadow-sm">
+        <h3 class="text-sm font-semibold opacity-90">Revenue</h3>
+        <p class="text-3xl font-bold mt-2">$56,890</p>
+        <p class="text-xs opacity-80 mt-1">This month</p>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Line Chart -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-scale-in">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-lg font-semibold text-gray-800">Weekly Sales Overview</h2>
+        </div>
+        <canvas id="salesChart" height="120"></canvas>
+      </div>
+
+      <!-- Doughnut Chart -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-scale-in" style="height: 380px;">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-lg font-semibold text-gray-800">Revenue Breakdown</h2>
+        </div>
+        <canvas id="revenueChart" height="100"></canvas>
+      </div>
+    </div>
+    {% endblock %}
+  </main>
+
+  <footer class="bg-blue-700 text-white text-center py-4 text-sm mt-auto">
+    © {{ current_year if current_year else '2025' }} POS System — All rights reserved.
+  </footer>
+
+  <!-- Chart Scripts -->
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx) {
+      new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Sales ($)',
+            data: [320, 480, 650, 710, 560, 900, 740],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,0.15)',
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    const revCtx = document.getElementById('revenueChart');
+    if (revCtx) {
+      new Chart(revCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Online', 'In-Store', 'Delivery'],
+          datasets: [{
+            data: [55, 25, 20],
+            backgroundColor: ['#60a5fa', '#34d399', '#fbbf24'],
+            hoverOffset: 2
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom' } },
+          maintainAspectRatio: false
+        }
+      });
+    }
+  });
+  </script>
 </body>
 </html>

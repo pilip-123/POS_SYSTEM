@@ -1,23 +1,46 @@
 {% extends 'base.html' %}
 {% block title %}Categories{% endblock %}
 {% block content %}
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-bold text-gray-800">Categories</h1>
-  <button id="open-add-modal" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Category</button>
+
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between sm:items-center mb-10 gap-4">
+  <div>
+    <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Categories</h1>
+    <p class="text-gray-500 text-sm mt-1">Manage and organize your product categories efficiently.</p>
+  </div>
+  <button id="open-add-modal"
+    class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300">
+    <span class="text-xl font-bold">+</span> Add Category
+  </button>
 </div>
 
-<div id="categories-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+<!-- Category Grid -->
+<div id="categories-grid"
+  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 transition-all duration-300">
+</div>
 
-<dialog id="category-modal">
-  <form id="category-form" class="space-y-4 p-4">
+<!-- Modal -->
+<dialog id="category-modal"
+  class="rounded-2xl shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm p-0 border-0 w-full max-w-md transition-all duration-300">
+  <form id="category-form" class="bg-white rounded-2xl p-8 space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900 text-center">Category Details</h2>
     <input type="hidden" id="category-id">
+
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-      <input id="category-name" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="category-name" required
+        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
     </div>
-    <div class="flex justify-end gap-2">
-      <button type="button" id="cancel-modal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+
+    <div class="flex justify-end gap-3 pt-4">
+      <button type="button" id="cancel-modal"
+        class="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200">
+        Cancel
+      </button>
+      <button type="submit"
+        class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200">
+        Save
+      </button>
     </div>
   </form>
 </dialog>
@@ -38,19 +61,38 @@
 
   function createCard(c) {
     const div = document.createElement('div');
-    div.className = 'card bg-white rounded-xl shadow-md p-6 animate-scale-in';
+    div.className = `
+      group relative bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md 
+      hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col justify-between
+    `;
     div.dataset.id = c.id;
+
     div.innerHTML = `
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">${c.name}</h3>
-      <div class="flex gap-2">
-        <button data-id="${c.id}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded flex-1 hover:bg-yellow-600">Edit</button>
-        <button data-id="${c.id}" class="delete-btn bg-red-600 text-white px-3 py-1 rounded flex-1 hover:bg-red-700">Delete</button>
+      <div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">${c.name}</h3>
       </div>
+      <div class="flex gap-3 mt-4">
+        <button data-id="${c.id}" 
+          class="edit-btn flex-1 bg-amber-500 text-white px-4 py-1.5 rounded-lg font-medium 
+          hover:bg-amber-600 transition-colors duration-200">
+          Edit
+        </button>
+        <button data-id="${c.id}" 
+          class="delete-btn flex-1 bg-red-600 text-white px-4 py-1.5 rounded-lg font-medium 
+          hover:bg-red-700 transition-colors duration-200">
+          Delete
+        </button>
+      </div>
+      <div class="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-blue-50 via-transparent to-transparent rounded-2xl transition-opacity duration-300 pointer-events-none"></div>
     `;
     return div;
   }
 
-  openAdd.onclick = () => { form.reset(); document.getElementById('category-id').value = ''; modal.showModal(); };
+  openAdd.onclick = () => {
+    form.reset();
+    document.getElementById('category-id').value = '';
+    modal.showModal();
+  };
   cancel.onclick = () => modal.close();
 
   form.onsubmit = async e => {
@@ -59,7 +101,11 @@
     const data = { name: document.getElementById('category-name').value };
     const method = id ? 'PUT' : 'POST';
     const url = id ? `/api/categories/${id}` : '/api/categories';
-    const res = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
     if (res.ok) {
       const cat = await res.json();
       if (id) {

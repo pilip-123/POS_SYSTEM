@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Home{% endblock %}
+
 {% block content %}
-<div class="text-center py-20">
-  <h1 class="text-5xl font-bold text-gray-800 mb-4 animate-fade-in">Welcome to POS System</h1>
-  <p class="text-lg text-gray-600">Manage sales, products, and customers with ease.</p>
+<div class="text-center py-10 animate-fade-in">
+  <h1 class="text-5xl font-bold text-gray-800 mb-3">Welcome to P_Control</h1>
+  <p class="text-lg text-gray-600 mb-10">Manage sales, products, and customers with ease.</p>
 </div>
+
+{{ super() }}
 {% endblock %}

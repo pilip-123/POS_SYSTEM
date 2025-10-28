@@ -1,85 +1,136 @@
 {% extends 'base.html' %}
-{% block title %}Reports{% endblock %}
+{% block title %}Sales Reports{% endblock %}
 {% block content %}
-<h1 class="text-3xl font-bold text-gray-800 mb-6">Sales Reports</h1>
 
-<div class="bg-white p-6 rounded-lg shadow mb-6">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-    <input type="date" id="from-date" value="{{ from_date }}" class="border rounded p-2 focus:ring-2 focus:ring-blue-500">
-    <input type="date" id="to-date" value="{{ to_date }}" class="border rounded p-2 focus:ring-2 focus:ring-blue-500">
-    <select id="product-filter" class="border rounded p- 2 focus:ring-2 focus:ring-blue-500">
-      <option value="">All Products</option>
-      {% for p in products %}
-      <option value="{{ p.id }}" {% if selected_product == p.id|string %}selected{% endif %}>{{ p.name }}</option>
-      {% endfor %}
-    </select>
-    <button id="apply-filter" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Apply Filter</button>
+<div class="max-w-7xl mx-auto px-6 py-10 space-y-10">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="text-4xl font-bold text-gray-900 tracking-tight">📊 Sales Reports</h1>
+    <p class="text-gray-500 mt-2 sm:mt-0">Insights into your business performance</p>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="bg-white/70 backdrop-blur-xl border border-gray-100 shadow-lg rounded-2xl p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" 
+           viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2l-7 8v6l-4-2v-4L3 6V4z" />
+      </svg>
+      Filter Reports
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div>
+        <label for="from-date" class="block text-sm font-medium text-gray-600 mb-1">From</label>
+        <input type="date" id="from-date" value="{{ from_date }}"
+          class="w-full border border-gray-200 rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+      </div>
+      <div>
+        <label for="to-date" class="block text-sm font-medium text-gray-600 mb-1">To</label>
+        <input type="date" id="to-date" value="{{ to_date }}"
+          class="w-full border border-gray-200 rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+      </div>
+      <div>
+        <label for="product-filter" class="block text-sm font-medium text-gray-600 mb-1">Product</label>
+        <select id="product-filter"
+          class="w-full border border-gray-200 rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+          <option value="">All Products</option>
+          {% for p in products %}
+          <option value="{{ p.id }}" {% if selected_product == p.id|string %}selected{% endif %}>
+            {{ p.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button id="apply-filter"
+          class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+          Apply Filter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-xl p-8">
+    <p class="text-sm uppercase tracking-wider opacity-80 font-medium">Total Income</p>
+    <p id="total-income" class="text-5xl font-extrabold mt-2 drop-shadow-lg">$ {{ "%.2f"|format(total_income) }}</p>
+    <p class="text-sm mt-2 opacity-75">Filtered results shown below</p>
+  </div>
+
+  <!-- Product Breakdown -->
+  <div class="bg-white/70 backdrop-blur-xl border border-gray-100 shadow-lg rounded-2xl p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">🧾 Product Breakdown</h2>
+    <div class="overflow-x-auto rounded-xl">
+      <table class="min-w-full text-sm text-gray-700">
+        <thead class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wide">
+          <tr>
+            <th class="px-4 py-3 text-left">Product</th>
+            <th class="px-4 py-3 text-right">Qty Sold</th>
+            <th class="px-4 py-3 text-right">Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="product-body" class="divide-y divide-gray-100">
+          {% for row in product_sales %}
+          <tr class="hover:bg-blue-50/50 transition">
+            <td class="px-4 py-3 font-medium">{{ row[0] }}</td>
+            <td class="px-4 py-3 text-right">{{ row[1]|default(0) }}</td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-900">$ {{ "%.2f"|format(row[2]|default(0)) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sales List -->
+  <div class="bg-white/70 backdrop-blur-xl border border-gray-100 shadow-lg rounded-2xl p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">💰 Sales List</h2>
+    <div class="overflow-x-auto rounded-xl">
+      <table class="min-w-full text-sm text-gray-700">
+        <thead class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wide">
+          <tr>
+            <th class="px-4 py-3 text-left">Sale ID</th>
+            <th class="px-4 py-3 text-left">Date</th>
+            <th class="px-4 py-3 text-left">Customer</th>
+            <th class="px-4 py-3 text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="sales-body" class="divide-y divide-gray-100">
+          {% for sale in sales %}
+          <tr class="hover:bg-indigo-50/50 transition">
+            <td class="px-4 py-3 font-semibold text-gray-900">#{{ sale.id }}</td>
+            <td class="px-4 py-3">{{ sale.date }}</td>
+            <td class="px-4 py-3">{{ sale.customer_name }}</td>
+            <td class="px-4 py-3 text-right font-bold text-blue-600">$ {{ "%.2f"|format(sale.total) }}</td>
+          </tr>
+
+          {% if sale['items'] %}
+          <tr class="bg-gray-50">
+            <td colspan="4" class="p-0">
+              <table class="w-full text-xs text-gray-600">
+                <tbody>
+                  {% for item in sale['items'] %}
+                  <tr class="border-t hover:bg-gray-100">
+                    <td class="pl-8 py-1">{{ item.product_name }}</td>
+                    <td class="text-center py-1">{{ item.quantity }}</td>
+                    <td class="text-right pr-8 py-1">$ {{ "%.2f"|format(item.subtotal) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
-<p class="text-2xl font-bold mb-4" id="total-income">$ {{ "%.2f"|format(total_income) }}</p>
-
-<h2 class="text-xl font-semibold mb-3">Product Breakdown</h2>
-<table class="w-full bordered mb-8">
-  <thead class="bg-gray-200">
-    <tr>
-      <th class="p-3 text-left">Product</th>
-      <th class="p-3 text-right">Qty Sold</th>
-      <th class="p-3 text-right">Revenue</th>
-    </tr>
-  </thead>
-  <tbody id="product-body">
-    {% for row in product_sales %}
-    <tr class="border-b">
-      <td class="p-3">{{ row[0] }}</td>
-      <td class="p-3 text-right">{{ row[1]|default(0) }}</td>
-      <td class="p-3 text-right">$ {{ "%.2f"|format(row[2]|default(0)) }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<h2 class="text-xl font-semibold mb-3">Sales List</h2>
-<table class="w-full bordered">
-  <thead class="bg-gray-200">
-    <tr>
-      <th class="p-3">ID</th>
-      <th class="p-3">Date</th>
-      <th class="p-3">Customer</th>
-      <th class="p-3 text-right">Total</th>
-    </tr>
-  </thead>
-  <tbody id="sales-body">
-    {% for sale in sales %}
-    <tr class="border-b">
-      <td class="p-3">#{{ sale.id }}</td>
-      <td class="p-3">{{ sale.date }}</td>                  <!-- FIXED: date -->
-      <td class="p-3">{{ sale.customer_name }}</td>         <!-- FIXED: customer -->
-      <td class="p-3 text-right font-semibold">$ {{ "%.2f"|format(sale.total) }}</td>
-    </tr>
-
-    <!-- Show items under sale -->
-    {% if sale['items'] %}
-    <tr class="bg-gray-50">
-      <td colspan="4" class="p-0">
-        <table class="w-full text-sm">
-          <tbody>
-            {% for item in sale['items'] %}
-            <tr>
-              <td class="pl-8 py-1">{{ item.product_name }}</td>
-              <td class="text-center py-1">{{ item.quantity }}</td>
-              <td class="text-right pr-8 py-1">$ {{ "%.2f"|format(item.subtotal) }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </td>
-    </tr>
-    {% endif %}
-    {% endfor %}
-  </tbody>
-</table>
-
+<!-- JavaScript: Refresh filters -->
 <script>
   const applyBtn = document.getElementById('apply-filter');
   const fromInput = document.getElementById('from-date');
@@ -108,4 +159,5 @@
   applyBtn.onclick = loadReports;
   [fromInput, toInput, productSelect].forEach(el => el.onchange = loadReports);
 </script>
+
 {% endblock %}
