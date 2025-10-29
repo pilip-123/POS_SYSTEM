@@ -3,144 +3,234 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}POS System{% endblock %}</title>
+  <title>{% block title %}P_Control POS{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
   <style>
-    .card { transition: all 0.3s ease; }
-    .card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-    .animate-scale-in { animation: scaleIn 0.3s ease-out; }
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: linear-gradient(135deg, #0f766e 0%, #065f46 100%);
+      color: white;
+      z-index: 1000;
+      box-shadow: 8px 0 30px rgba(0, 0, 0, 0.15);
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+
+    .logo {
+      padding: 28px 24px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .logo svg {
+      height: 38px;
+      filter: brightness(0) invert(1);
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover svg {
+      transform: rotate(12deg) scale(1.05);
+    }
+
+    .logo span {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(to right, #ecfdf5, #bbf7d0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* NAV LINKS */
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 24px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+      font-size: 14.5px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 4px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link i {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      background: rgba(255, 255, 255, 0.15);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::before {
+      width: 100%;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      border-left-color: #ecfdf5;
+      padding-left: 28px;
+      transform: translateX(4px);
+    }
+
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-left-color: #ecfdf5;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      right: 20px;
+      width: 8px;
+      height: 8px;
+      background: #ecfdf5;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(236, 253, 245, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(236, 253, 245, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(236, 253, 245, 0); }
+    }
+
+    /* CONTENT */
+    .content {
+      margin-left: 260px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+    }
+
+    /* CARDS & ANIMATIONS */
+    .card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    .animate-scale-in { animation: scaleIn 0.4s ease-out; }
+
+    /* SCROLLBAR */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+    }
   </style>
 </head>
+<body>
 
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col">
+  <!-- ENHANCED SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <!-- <svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="" class="inline">
+        <path d="M3 12L5 10M5 10L12 3L19 10M5 10L9 14M19 10L21 12M19 10L15 14M9 14L3 21H21L15 14M9 14L15 14" 
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg> -->
+      <span>P_Control</span>
+    </div>
 
-  <!-- Navbar -->
-  <nav class="bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-md sticky top-0 z-50">
-    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-      <a href="{{ url_for('index') }}" class="text-2xl font-bold tracking-wide">P_Control</a>
-      <div class="space-x-4 text-sm font-medium">
-        <a href="{{ url_for('categories') }}" class="hover:text-blue-200 transition">Categories</a>
-        <a href="{{ url_for('products') }}" class="hover:text-blue-200 transition">Products</a>
-        <a href="{{ url_for('customers') }}" class="hover:text-blue-200 transition">Customers</a>
-        <a href="{{ url_for('billing') }}" class="hover:text-blue-200 transition">Billing</a>
-        <a href="{{ url_for('sales') }}" class="hover:text-blue-200 transition">Sales</a>
-        <a href="{{ url_for('reports') }}" class="hover:text-blue-200 transition">Reports</a>
-      </div>
+    <div class="mt-8 space-y-1 px-4">
+      <a href="{{ url_for('index') }}" class="nav-link {{ 'active' if request.path == '/' else '' }}">
+        <i class="fas fa-home"></i> Dashboard
+      </a>
+      <a href="{{ url_for('categories') }}" class="nav-link {{ 'active' if request.path == '/categories' else '' }}">
+        <i class="fas fa-th-large"></i> Categories
+      </a>
+      <a href="{{ url_for('products') }}" class="nav-link {{ 'active' if request.path == '/products' else '' }}">
+        <i class="fas fa-box"></i> Products
+      </a>
+      <a href="{{ url_for('billing') }}" class="nav-link {{ 'active' if request.path == '/billing' else '' }}">
+        <i class="fas fa-shopping-cart"></i> Orders
+      </a>
+      <a href="{{ url_for('sales') }}" class="nav-link {{ 'active' if request.path == '/sales' else '' }}">
+        <i class="fas fa-chart-line"></i> Sales
+      </a>
+      <a href="{{ url_for('customers') }}" class="nav-link {{ 'active' if request.path == '/customers' else '' }}">
+        <i class="fas fa-users"></i> Manage Users
+      </a>
+      <a href="{{ url_for('reports') }}" class="nav-link {{ 'active' if request.path == '/reports' else '' }}">
+        <i class="fas fa-file-invoice-dollar"></i> Reports
+      </a>
+    </div>
+
+    <div class="absolute bottom-0 w-full p-4 border-t border-white/10 bg-gradient-to-t from-black/10">
+      <a href="/logout" class="nav-link text-red-200 hover:text-white hover:bg-red-600/20 rounded-xl text-sm font-medium">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <main class="flex-grow container mx-auto px-6 py-8">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6 animate-fade-in shadow-sm">
-          {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+  <!-- MAIN CONTENT -->
+  <div class="content">
+    <main class="flex-grow container mx-auto px-6 py-8">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-emerald-500 text-emerald-700 p-5 rounded-xl mb-6 animate-fade-in shadow-md flex items-center gap-3">
+            <i class="fas fa-check-circle text-emerald-600"></i>
+            {% for message in messages %}<p class="font-medium">{{ message }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
 
-    {% block content %}
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h1>
+      {% block content %}{% endblock %}
+    </main>
 
-    <!-- Cards Row -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="card bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl p-6 shadow-sm">
-        <h3 class="text-sm font-semibold opacity-90">Total Sales</h3>
-        <p class="text-3xl font-bold mt-2">$730,340</p>
-        <p class="text-xs opacity-80 mt-1">+15% from last week</p>
-      </div>
-      <div class="card bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl p-6 shadow-sm">
-        <h3 class="text-sm font-semibold opacity-90">Customers</h3>
-        <p class="text-3xl font-bold mt-2">138</p>
-        <p class="text-xs opacity-80 mt-1">+12 new customers</p>
-      </div>
-      <div class="card bg-gradient-to-r from-yellow-500 to-amber-400 text-white rounded-xl p-6 shadow-sm">
-        <h3 class="text-sm font-semibold opacity-90">Products Sold</h3>
-        <p class="text-3xl font-bold mt-2">1,129</p>
-        <p class="text-xs opacity-80 mt-1">Top-selling item: Car</p>
-      </div>
-      <div class="card bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-xl p-6 shadow-sm">
-        <h3 class="text-sm font-semibold opacity-90">Revenue</h3>
-        <p class="text-3xl font-bold mt-2">$56,890</p>
-        <p class="text-xs opacity-80 mt-1">This month</p>
-      </div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Line Chart -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-scale-in">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="text-lg font-semibold text-gray-800">Weekly Sales Overview</h2>
-        </div>
-        <canvas id="salesChart" height="120"></canvas>
-      </div>
-
-      <!-- Doughnut Chart -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-scale-in" style="height: 380px;">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="text-lg font-semibold text-gray-800">Revenue Breakdown</h2>
-        </div>
-        <canvas id="revenueChart" height="100"></canvas>
-      </div>
-    </div>
-    {% endblock %}
-  </main>
-
-  <footer class="bg-blue-700 text-white text-center py-4 text-sm mt-auto">
-    © {{ current_year if current_year else '2025' }} POS System — All rights reserved.
-  </footer>
+    <footer class="bg-gradient-to-r from-teal-700 to-teal-600 text-white text-center py-5 text-sm font-medium shadow-lg">
+      © {{ now().year if now else '2025' }} <span class="text-teal-200">P_Control POS</span> — All rights reserved.
+    </footer>
+  </div>
 
   <!-- Chart Scripts -->
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const salesCtx = document.getElementById('salesChart');
-    if (salesCtx) {
-      new Chart(salesCtx, {
-        type: 'line',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            label: 'Sales ($)',
-            data: [320, 480, 650, 710, 560, 900, 740],
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37,99,235,0.15)',
-            tension: 0.3,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
-        }
-      });
-    }
-
-    const revCtx = document.getElementById('revenueChart');
-    if (revCtx) {
-      new Chart(revCtx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Online', 'In-Store', 'Delivery'],
-          datasets: [{
-            data: [55, 25, 20],
-            backgroundColor: ['#60a5fa', '#34d399', '#fbbf24'],
-            hoverOffset: 2
-          }]
-        },
-        options: {
-          plugins: { legend: { position: 'bottom' } },
-          maintainAspectRatio: false
-        }
-      });
-    }
-  });
-  </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

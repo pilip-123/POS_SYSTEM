@@ -1,37 +1,108 @@
-{% extends 'base.html' %}
-{% block title %}Receipt #{{ sale.id }}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Receipt #{{ "%04d"|format(sale.id) }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body { margin: 0; padding: 0; background: white !important; }
+      .no-print { display: none !important; }
+      .receipt { box-shadow: none !important; }
+    }
+    .receipt {
+      max-width: 80mm;
+      margin: 20px auto;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen py-8">
 
-{% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
-  <h1 class="text-2xl font-bold text-center mb-4">Receipt #{{ sale.id }}</h1>
-  <p class="text-center text-gray-600">Date: {{ sale.date }}</p>
-  <p class="text-center text-gray-600 mb-6">Customer: {{ sale.customer_name }}</p>
+  <div class="receipt">
+    <!-- Store Header -->
+    <div class="text-center border-b-2 border-dashed border-gray-400 pb-3 mb-3">
+      <h1 class="text-lg font-bold text-teal-700">P_Control</h1>
+      <p class="text-xs text-gray-600">123 Business Street, City</p>
+      <p class="text-xs text-gray-600">Phone: (+885) 665 097 93</p>
+    </div>
 
-  <table class="w-full mb-6">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="p-2 text-left">Item</th>
-        <th class="p-2 text-right">Qty</th>
-        <th class="p-2 text-right">Price</th>
-        <th class="p-2 text-right">Subtotal</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in sale['items'] %}  <!-- ← CHANGED: sale['items'] -->
-      <tr class="border-b">
-        <td class="p-2">{{ item.product_name }}</td>
-        <td class="p-2 text-right">{{ item.quantity }}</td>
-        <td class="p-2 text-right">$ {{ "%.2f"|format(item.price) }}</td>
-        <td class="p-2 text-right">$ {{ "%.2f"|format(item.subtotal) }}</td>
-      </tr>
+    <!-- Receipt Info -->
+    <div class="space-y-1 mb-3 text-xs">
+      <div class="flex justify-between">
+        <span>Receipt #:</span>
+        <span class="font-bold">#{{ "%04d"|format(sale.id) }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Date:</span>
+        <span>{{ sale.date.strftime('%d/%m/%Y %I:%M %p') }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Cashier:</span>
+        <span>Admin</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Customer:</span>
+        <span class="font-medium">{{ sale.customer.name if sale.customer else 'Walk-in' }}</span>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="border-t border-dashed border-gray-400 my-3"></div>
+
+    <!-- Items -->
+    <div class="space-y-2 mb-3">
+      {% for item in sale.items %}
+      <div class="flex justify-between text-xs">
+        <div class="flex-1">
+          <div class="font-medium">{{ item.product.name }}</div>
+          <div class="text-gray-600 text-xs">
+            {{ item.quantity }} × ${{ "%.2f"|format(item.price) }}
+          </div>
+        </div>
+        <div class="font-bold text-right">
+          ${{ "%.2f"|format(item.quantity * item.price) }}
+        </div>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
 
-  <p class="text-xl font-bold text-right">Total: $ {{ "%.2f"|format(sale.total) }}</p>
+    <!-- Divider -->
+    <div class="border-t border-dashed border-gray-400 my-3"></div>
 
-  <div class="text-center mt-6">
-    <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded">Print</button>
+    <!-- Total -->
+    <div class="text-right font-bold text-sm">
+      <div class="flex justify-between">
+        <span class="text-base">TOTAL:</span>
+        <span class="text-xl text-teal-600">$ {{ "%.2f"|format(sale.total) }}</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-4 text-xs text-gray-500 border-t pt-3">
+      <p>Thank you for shopping with us!</p>
+      <p>Items are non-refundable</p>
+    </div>
   </div>
-</div>
-{% endblock %}
+
+  <!-- Action Buttons -->
+  <div class="text-center mt-6 space-x-3 no-print">
+    <button onclick="window.print()"
+            class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition transform hover:scale-105">
+      Print Receipt
+    </button>
+    <a href="{{ url_for('sales') }}"
+       class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg transition transform hover:scale-105 inline-block">
+      Back to Sales
+    </a>
+  </div>
+
+</body>
+</html>

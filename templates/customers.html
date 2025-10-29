@@ -1,113 +1,270 @@
 {% extends 'base.html' %}
 {% block title %}Customers{% endblock %}
 {% block content %}
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-3xl font-bold text-gray-800">Customers</h1>
-  <button id="open-add-modal" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Customer</button>
+
+<div class="max-w-7xl mx-auto p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-teal-700">Customer Management</h1>
+  </div>
+
+  <!-- Add Customer Form -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <input id="add-name" type="text" placeholder="Customer Name" 
+             class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+      <input id="add-phone" type="text" placeholder="Phone Number" 
+             class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+      <input id="add-email" type="email" placeholder="Email" 
+             class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+    </div>
+    <button id="add-customer-btn" 
+            class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200">
+      + Add Customer
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input id="search-input" type="text" placeholder="Search by name or phone..." 
+             class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+      <button id="search-btn" 
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200">
+        Search
+      </button>
+    </div>
+  </div>
+
+  <!-- Customers Table -->
+  <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-8">
+    <table class="w-full">
+      <thead class="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+        <tr>
+          <th class="px-6 py-4 text-left font-semibold">Name</th>
+          <th class="px-6 py-4 text-left font-semibold">Phone</th>
+          <th class="px-6 py-4 text-left font-semibold">Email</th>
+          <th class="px-6 py-4 text-center font-semibold">Sales History</th>
+          <th class="px-6 py-4 text-center font-semibold">Action</th>
+        </tr>
+      </thead>
+      <tbody id="customers-tbody" class="divide-y divide-gray-100">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Sales History Section -->
+  <div id="sales-history-section" class="hidden bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+    <h2 class="text-xl font-bold text-teal-700 mb-4">Sales History (Selected Customer)</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left font-semibold">Date</th>
+            <th class="px-6 py-3 text-left font-semibold">Product</th>
+            <th class="px-6 py-3 text-right font-semibold">Total</th>
+          </tr>
+        </thead>
+        <tbody id="sales-tbody">
+          <tr>
+            <td colspan="3" class="text-center py-8 text-gray-500">No customer selected</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
-<div id="customers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
-
-<dialog id="customer-modal">
-  <form id="customer-form" class="space-y-4 p-4">
-    <input type="hidden" id="customer-id">
+<!-- Edit Modal -->
+<dialog id="edit-modal" class="rounded-2xl shadow-2xl p-6 w-full max-w-md border border-gray-200">
+  <form id="edit-form" class="space-y-4">
+    <input type="hidden" id="edit-id">
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-      <input id="customer-name" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-      <input id="customer-email" type="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="edit-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-      <input id="customer-phone" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="edit-phone" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
     </div>
-    <div class="flex justify-end gap-2">
-      <button type="button" id="cancel-modal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+      <input id="edit-email" type="email" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+    </div>
+    <div class="flex justify-end gap-3 pt-4">
+      <button type="button" id="cancel-edit" class="px-5 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium">Cancel</button>
+      <button type="submit" class="px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium shadow-md">Save</button>
     </div>
   </form>
 </dialog>
 
 <script>
-  const modal = document.getElementById('customer-modal');
-  const form = document.getElementById('customer-form');
-  const grid = document.getElementById('customers-grid');
-  const openAdd = document.getElementById('open-add-modal');
-  const cancel = document.getElementById('cancel-modal');
+  const tbody = document.getElementById('customers-tbody');
+  const salesTbody = document.getElementById('sales-tbody');
+  const salesSection = document.getElementById('sales-history-section');
+  const modal = document.getElementById('edit-modal');
+  const form = document.getElementById('edit-form');
+  let selectedCustomerId = null;
 
-  async function loadCustomers() {
+  // Load Customers
+  async function loadCustomers(filter = '') {
     const res = await fetch('/api/customers');
-    const custs = await res.json();
-    grid.innerHTML = '';
-    custs.forEach(c => grid.appendChild(createCard(c)));
+    let customers = await res.json();
+    if (filter) {
+      const lower = filter.toLowerCase();
+      customers = customers.filter(c => 
+        c.name.toLowerCase().includes(lower) || 
+        (c.phone && c.phone.includes(filter))
+      );
+    }
+    renderCustomers(customers);
   }
 
-  function createCard(c) {
-    const div = document.createElement('div');
-    div.className = 'card bg-white rounded-xl shadow-md p-6 animate-scale-in';
-    div.dataset.id = c.id;
-    div.innerHTML = `
-      <h3 class="text-xl font-semibold text-gray-800 mb-2">${c.name}</h3>
-      <p class="text-sm text-gray-600 mb-1">Email: ${c.email || 'N/A'}</p>
-      <p class="text-sm text-gray-600 mb-4">Phone: ${c.phone || 'N/A'}</p>
-      <div class="flex gap-2">
-        <button data-id="${c.id}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded flex-1 hover:bg-yellow-600">Edit</button>
-        <button data-id="${c.id}" class="delete-btn bg-red-600 text-white px-3 py-1 rounded flex-1 hover:bg-red-700">Delete</button>
-      </div>
-    `;
-    return div;
+  // Render Customers
+  function renderCustomers(customers) {
+    tbody.innerHTML = '';
+    if (customers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No customers found</td></tr>`;
+      return;
+    }
+    customers.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-gray-50 transition-colors';
+      tr.innerHTML = `
+        <td class="px-6 py-4 font-medium text-gray-900">${c.name}</td>
+        <td class="px-6 py-4 text-gray-700">${c.phone || '—'}</td>
+        <td class="px-6 py-4 text-gray-700">${c.email || '—'}</td>
+        <td class="px-6 py-4 text-center">
+          <button onclick="viewSales(${c.id}, '${c.name.replace(/'/g, "\\'")}')" 
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm font-medium shadow-sm transition">
+            View
+          </button>
+        </td>
+        <td class="px-6 py-4 text-center">
+          <button onclick="editCustomer(${c.id})" 
+                  class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm mr-2">Edit</button>
+          <button onclick="deleteCustomer(${c.id})" 
+                  class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
-  openAdd.onclick = () => { form.reset(); document.getElementById('customer-id').value = ''; modal.showModal(); };
-  cancel.onclick = () => modal.close();
+  // Add Customer
+  document.getElementById('add-customer-btn').onclick = async () => {
+    const name = document.getElementById('add-name').value.trim();
+    const phone = document.getElementById('add-phone').value.trim();
+    const email = document.getElementById('add-email').value.trim();
+    if (!name) return alert('Name is required');
 
-  form.onsubmit = async e => {
-    e.preventDefault();
-    const id = document.getElementById('customer-id').value;
-    const data = {
-      name: document.getElementById('customer-name').value,
-      email: document.getElementById('customer-email').value,
-      phone: document.getElementById('customer-phone').value
-    };
-    const method = id ? 'PUT' : 'POST';
-    const url = id ? `/api/customers/${id}` : '/api/customers';
-    const res = await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+    const res = await fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, email })
+    });
     if (res.ok) {
-      const c = await res.json();
-      if (id) {
-        const card = grid.querySelector(`[data-id="${id}"]`);
-        card.querySelector('h3').textContent = c.name;
-        card.querySelectorAll('p')[0].innerHTML = `Email: ${c.email || 'N/A'}`;
-        card.querySelectorAll('p')[1].innerHTML = `Phone: ${c.phone || 'N/A'}`;
-      } else {
-        grid.appendChild(createCard(c));
-      }
-      modal.close();
+      document.getElementById('add-name').value = '';
+      document.getElementById('add-phone').value = '';
+      document.getElementById('add-email').value = '';
+      loadCustomers();
     }
   };
 
-  grid.addEventListener('click', async e => {
-    const btn = e.target;
-    const id = btn.dataset.id;
-    const card = btn.closest('[data-id]');
-    if (btn.classList.contains('edit-btn')) {
-      const res = await fetch(`/api/customers/${id}`);
-      const c = await res.json();
-      document.getElementById('customer-id').value = c.id;
-      document.getElementById('customer-name').value = c.name;
-      document.getElementById('customer-email').value = c.email;
-      document.getElementById('customer-phone').value = c.phone;
-      modal.showModal();
-    } else if (btn.classList.contains('delete-btn')) {
-      if (confirm('Delete this customer?')) {
-        await fetch(`/api/customers/${id}`, { method: 'DELETE' });
-        card.remove();
-      }
-    }
+  // Search
+  document.getElementById('search-btn').onclick = () => {
+    const query = document.getElementById('search-input').value;
+    loadCustomers(query);
+  };
+  document.getElementById('search-input').addEventListener('keypress', e => {
+    if (e.key === 'Enter') document.getElementById('search-btn').click();
   });
 
+  // Edit
+  window.editCustomer = async (id) => {
+    const res = await fetch(`/api/customers/${id}`);
+    const c = await res.json();
+    document.getElementById('edit-id').value = c.id;
+    document.getElementById('edit-name').value = c.name;
+    document.getElementById('edit-phone').value = c.phone || '';
+    document.getElementById('edit-email').value = c.email || '';
+    modal.showModal();
+  };
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-id').value;
+    const data = {
+      name: document.getElementById('edit-name').value,
+      phone: document.getElementById('edit-phone').value,
+      email: document.getElementById('edit-email').value
+    };
+    const res = await fetch(`/api/customers/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      modal.close();
+      loadCustomers();
+    }
+  };
+
+  document.getElementById('cancel-edit').onclick = () => modal.close();
+
+  // Delete
+  window.deleteCustomer = async (id) => {
+    if (!confirm('Delete this customer?')) return;
+    await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+    loadCustomers();
+    if (selectedCustomerId === id) {
+      salesSection.classList.add('hidden');
+      selectedCustomerId = null;
+    }
+  };
+
+  // View Sales History – FULLY FIXED
+  window.viewSales = async (customerId, customerName) => {
+    selectedCustomerId = customerId;
+    salesSection.classList.remove('hidden');
+    document.querySelector('#sales-history-section h2').textContent = `Sales History (${customerName})`;
+
+    const res = await fetch('/api/sales');
+    const allSales = await res.json();
+
+    // Filter by customer_id (including null for walk-in)
+    const customerSales = allSales.filter(s => 
+      s.customer_id === customerId || 
+      (s.customer_id === null && customerId === null)
+    );
+
+    salesTbody.innerHTML = '';
+    if (customerSales.length === 0) {
+      salesTbody.innerHTML = `<tr><td colspan="3" class="text-center py-8 text-gray-500">No sales found</td></tr>`;
+      return;
+    }
+
+    customerSales.forEach(sale => {
+      sale.items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50';
+        tr.innerHTML = `
+          <td class="px-6 py-3 text-gray-700">${sale.date.split('T')[0]}</td>
+          <td class="px-6 py-3 text-gray-700">${item.product_name}</td>
+          <td class="px-6 py-3 text-right font-medium text-teal-600">$${item.subtotal.toFixed(2)}</td>
+        `;
+        salesTbody.appendChild(tr);
+      });
+    });
+  };
+
+  // Load on start
   loadCustomers();
 </script>
+
+<style>
+  dialog::backdrop { background: rgba(0,0,0,0.5); }
+</style>
 {% endblock %}

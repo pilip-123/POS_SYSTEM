@@ -1,3 +1,4 @@
+<!-- templates/billing.html -->
 {% extends 'base.html' %}
 {% block title %}Billing{% endblock %}
 
@@ -95,7 +96,7 @@
   }
 </style>
 
-<!-- SCRIPT -->
+<!-- SCRIPT – ONLY 3 LINES FIXED -->
 <script>
   let cart = [];
   const productsList = document.getElementById('products-list');
@@ -121,7 +122,6 @@
       customerSelect.appendChild(opt);
     });
 
-    // Search Filter
     searchInput.addEventListener('input', e => {
       const term = e.target.value.toLowerCase();
       const filtered = products.filter(p => p.name.toLowerCase().includes(term));
@@ -142,7 +142,7 @@
         'group bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-lg transition-transform hover:scale-[1.03] flex flex-col overflow-hidden';
       div.innerHTML = `
         <div class="relative">
-          <img src="${p.image_url}" alt="${p.name}"
+          <img src="${p.image ? '/static/uploads/' + p.image : '/static/no-image.png'}" alt="${p.name}"
                class="w-full h-36 object-cover group-hover:opacity-90 transition"
                onerror="this.src='/static/no-image.png'">
           <span class="absolute top-2 right-2 bg-white text-xs font-medium px-2 py-0.5 rounded shadow-sm text-gray-700">Stock: ${p.stock}</span>
@@ -232,11 +232,17 @@
     }
   });
 
-  // Confirm Sale
+  // Confirm Sale – FIXED: send quantity + price
   document.getElementById('confirm-sale').onclick = async () => {
     if (cart.length === 0) return alert('Your cart is empty!');
-    const items = cart.map(i => ({ product_id: parseInt(i.id), qty: i.qty }));
-    const customer_id = customerSelect.value || null;
+
+    const items = cart.map(i => ({
+      product_id: parseInt(i.id),
+      quantity: i.qty,
+      price: i.price
+    }));
+
+    const customer_id = customerSelect.value ? parseInt(customerSelect.value) : null;
 
     try {
       const res = await fetch('/api/sales', {

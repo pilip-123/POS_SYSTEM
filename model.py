@@ -19,7 +19,7 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
     description = db.Column(db.Text)
-    image = db.Column(db.String(255))                     # filename only
+    image = db.Column(db.String(255))  # filename only
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     category = db.relationship('Category', backref='products')
 
@@ -61,8 +61,6 @@ class Sale(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow)
     total = db.Column(db.Float, default=0.0)
     customer = db.relationship('Customer', backref='sales')
-
-    # backref creates `sale.items` (list of SaleItem)
     items = db.relationship('SaleItem', backref='sale', lazy=True)
 
     def to_dict(self, include_items=True):
@@ -93,7 +91,7 @@ class SaleItem(db.Model):
             "product_name": self.product.name,
             "quantity": self.quantity,
             "price": self.price,
-            "subtotal": round(self.quantity * self.price, 2)   # REQUIRED
+            "subtotal": round(self.quantity * self.price, 2)
         }
 
     def __repr__(self):

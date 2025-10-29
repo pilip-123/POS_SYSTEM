@@ -1,11 +1,90 @@
 {% extends 'base.html' %}
-{% block title %}Home{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="text-center py-10 animate-fade-in">
-  <h1 class="text-5xl font-bold text-gray-800 mb-3">Welcome to P_Control</h1>
-  <p class="text-lg text-gray-600 mb-10">Manage sales, products, and customers with ease.</p>
+<h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h1>
+
+<!-- Cards Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div class="card bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl p-6 shadow-sm">
+    <h3 class="text-sm font-semibold opacity-90">Total Sales</h3>
+    <p class="text-3xl font-bold mt-2">$730,340</p>
+    <p class="text-xs opacity-80 mt-1">+15% from last week</p>
+  </div>
+  <div class="card bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl p-6 shadow-sm">
+    <h3 class="text-sm font-semibold opacity-90">Customers</h3>
+    <p class="text-3xl font-bold mt-2">138</p>
+    <p class="text-xs opacity-80 mt-1">+12 new customers</p>
+  </div>
+  <div class="card bg-gradient-to-r from-yellow-500 to-amber-400 text-white rounded-xl p-6 shadow-sm">
+    <h3 class="text-sm font-semibold opacity-90">Products Sold</h3>
+    <p class="text-3xl font-bold mt-2">1,129</p>
+    <p class="text-xs opacity-80 mt-1">Top-selling item: Car</p>
+  </div>
+  <div class="card bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-xl p-6 shadow-sm">
+    <h3 class="text-sm font-semibold opacity-90">Revenue</h3>
+    <p class="text-3xl font-bold mt-2">$56,890</p>
+    <p class="text-xs opacity-80 mt-1">This month</p>
+  </div>
 </div>
 
-{{ super() }}
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-scale-in">
+    <h2 class="text-lg font-semibold text-gray-800 mb-3">Weekly Sales Overview</h2>
+    <canvas id="salesChart" height="120"></canvas>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-scale-in" style="height: 380px;">
+    <h2 class="text-lg font-semibold text-gray-800 mb-2">Revenue Breakdown</h2>
+    <canvas id="revenueChart" height="100"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx) {
+      new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Sales ($)',
+            data: [320, 480, 650, 710, 560, 900, 740],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,0.15)',
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    const revCtx = document.getElementById('revenueChart');
+    if (revCtx) {
+      new Chart(revCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Online', 'In-Store', 'Delivery'],
+          datasets: [{
+            data: [55, 25, 20],
+            backgroundColor: ['#60a5fa', '#34d399', '#fbbf24'],
+            hoverOffset: 2
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom' } },
+          maintainAspectRatio: false
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}
