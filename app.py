@@ -23,25 +23,18 @@ def allowed_file(filename):
 
 
 # ========================================
-# DASHBOARD – FIXED TOP PRODUCT SQL ERROR
+# DASHBOARD
 # ========================================
 @app.route('/')
 def index():
-    # TOTAL SALES
     total_sales = db.session.query(func.sum(Sale.total)).scalar() or 0
-
-    # TOTAL CUSTOMERS
     total_customers = Customer.query.count()
-
-    # TOTAL PRODUCTS SOLD
     products_sold = db.session.query(func.sum(SaleItem.quantity)).scalar() or 0
 
-    # REVENUE THIS MONTH
     this_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     revenue_month = db.session.query(func.sum(Sale.total))\
         .filter(Sale.date >= this_month).scalar() or 0
 
-    # TOP-SELLING PRODUCT – FIXED
     qty_sum = func.coalesce(func.sum(SaleItem.quantity), 0).label('qty')
     top_product = db.session.query(Product.name, qty_sum)\
         .join(SaleItem, isouter=True)\
@@ -50,7 +43,6 @@ def index():
         .first()
     top_product_name = top_product.name if top_product else "N/A"
 
-    # GROWTH: THIS WEEK vs LAST WEEK
     today = datetime.now()
     this_week_start = today - timedelta(days=today.weekday())
     last_week_start = this_week_start - timedelta(days=7)
@@ -65,7 +57,6 @@ def index():
     if sales_last_week > 0:
         growth = round(((sales_this_week - sales_last_week) / sales_last_week) * 100, 1)
 
-    # NEW CUSTOMERS THIS WEEK
     new_customers = db.session.query(Customer.id).join(Sale)\
         .filter(Sale.date >= this_week_start).distinct().count()
 
@@ -224,7 +215,7 @@ def api_customer(id):
 
 
 # ========================================
-# SALES & BILLING – FIXED POST METHOD
+# SALES & BILLING – FIXED: STOCK DEDUCTED
 # ========================================
 @app.route('/billing')
 def billing():
@@ -233,46 +224,67 @@ def billing():
 @app.route('/api/sales', methods=['GET', 'POST'])
 def api_sales():
     if request.method == 'POST':
-        data = request.get_json()
-        items = data.get('items', [])
-        
-        # FIXED: Use customer_id if provided, else create by name
+        data = request.json
         customer_id = data.get('customer_id')
-        customer_name = data.get('customer_name', 'Walk-in')
-
+        items = data.get('items', [])
         if not items:
             return jsonify({"error": "No items"}), 400
 
-        # Use existing customer by ID, or find/create by name
-        customer = None
-        if customer_id:
-            customer = Customer.query.get(customer_id)
-        if not customer:
-            customer = Customer.query.filter_by(name=customer_name).first()
-        if not customer:
-            customer = Customer(name=customer_name)
-            db.session.add(customer)
-            db.session.flush()
-
         total = 0
-        sale_items = []
         for item in items:
             product = Product.query.get(item['product_id'])
-            if not product or product.stock < item['quantity']:
-                db.session.rollback()
-                return jsonify({"error": "Invalid product or stock"}), 400
+            if not product:
+                return jsonify({"error": "Product not found"}), 400
+            if product.stock < item['quantity']:
+                return jsonify({"error": f"Only {product.stock} {product.name} in stock"}), 400
             total += product.price * item['quantity']
-            sale_items.append(SaleItem(
-                product_id=product.id,
-                quantity=item['quantity'],
-                price=product.price
-            ))
-            product.stock -= item['quantity']
+            product.stock -= item['quantity']  # DEDUCT STOCK
 
-        sale = Sale(total=total, customer_id=customer.id, items=sale_items)
+        sale = Sale(
+            customer_id=customer_id,
+            total=total,
+            date=datetime.utcnow()
+        )
         db.session.add(sale)
+        db.session.flush()
+
+        for item in items:
+            sale_item = SaleItem(
+                sale_id=sale.id,
+                product_id=item['product_id'],
+                quantity=item['quantity'],
+                price=item['price']
+            )
+            db.session.add(sale_item)
+
         db.session.commit()
-        return jsonify({"id": sale.id, "total": total})
+        return jsonify({"id": sale.id, "total": total}), 201
+
+    # GET: return all sales
+    try:
+        sales = Sale.query.options(
+            joinedload(Sale.customer),
+            joinedload(Sale.items).joinedload(SaleItem.product)
+        ).order_by(Sale.date.desc()).all()
+
+        return jsonify([{
+            "id": s.id,
+            "date": s.date.strftime("%Y-%m-%d %H:%M:%S"),
+            "total": float(s.total),
+            "customer_id": s.customer.id if s.customer else None,
+            "customer_name": s.customer.name if s.customer else "Walk-in",
+            "items": [{
+                "product_name": item.product.name,
+                "quantity": item.quantity,
+                "price": float(item.price)
+            } for item in s.items]
+        } for s in sales])
+    
+    except Exception as e:
+        print("API SALES ERROR:", e)
+        import traceback
+        traceback.print_exc()
+        return jsonify([]), 500
 
 @app.route('/api/sales/<int:id>')
 def api_sale(id):
@@ -329,6 +341,7 @@ def receipt(sid):
         db.joinedload(Sale.customer)
     ).get_or_404(sid)
     return render_template('receipt.html', sale=sale)
+
 
 # ========================================
 # REPORTS & EXPORT
