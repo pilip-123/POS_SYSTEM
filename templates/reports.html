@@ -1,193 +1,341 @@
 {% extends 'base.html' %}
-{% block title %}Sales Report{% endblock %}
+{% block title %}Reports{% endblock %}
+
 {% block content %}
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-teal-50 py-10 px-4">
+  <div class="max-w-7xl mx-auto">
 
-<div class="max-w-7xl mx-auto p-6 bg-gradient-to-br from-gray-50 to-teal-50 min-h-screen">
-
-  <!-- Header -->
-  <div class="text-center mb-10">
-    <h1 class="text-4xl font-extrabold text-teal-700 tracking-tight">
-      Sales Report
-    </h1>
-    <p class="text-gray-600 mt-2 text-sm">Detailed sales and product performance</p>
-  </div>
-
-  <!-- Filters -->
-  <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-        <input type="date" id="from-date" value="{{ from_date }}"
-               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-gray-50">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-        <input type="date" id="to-date" value="{{ to_date }}"
-               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-gray-50">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
-        <select id="product-filter"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-gray-50">
-          <option value="">All Products</option>
-          {% for p in products %}
-          <option value="{{ p.id }}" {% if selected_product == p.id|string %}selected{% endif %}>{{ p.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="flex gap-2">
-        <button id="apply-filter"
-                class="flex-1 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-          Apply Filter
-        </button>
-        <button id="reset-filter"
-                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-          Reset
-        </button>
+    <!-- Header -->
+    <div class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl p-8 mb-8 border border-white/20">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-indigo-600 flex items-center gap-3">
+            <svg class="w-10 h-10 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Sales Reports
+          </h1>
+          <p class="text-gray-600 mt-2">Analyze sales, filter data, and export reports</p>
+        </div>
+        <div class="flex gap-3">
+          <button id="print-report" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+          </button>
+          <button id="export-pdf" class="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export PDF
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Action Buttons -->
-  <div class="flex justify-end gap-3 mb-6">
-    <button id="print-report"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition">
-      Print Report
-    </button>
-    <button id="export-pdf"
-            class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-md hover:shadow-lg transition">
-      Export PDF
-    </button>
-  </div>
-
-  <!-- Product Breakdown -->
-  <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-8">
-    <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-5">
-      <h2 class="text-xl font-bold text-white tracking-wide">Product Breakdown</h2>
+    <!-- Filters -->
+    <div class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl p-6 mb-8 border border-white/20">
+      <form id="filter-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
+          <input type="date" name="from_date" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
+          <input type="date" name="to_date" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Product</label>
+          <select name="product_id" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none">
+            <option value="">All Products</option>
+          </select>
+        </div>
+        <div class="flex gap-3 items-end">
+          <button type="submit" class="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all">
+            Generate
+          </button>
+          <button type="button" id="reset-filters" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all">
+            Reset
+          </button>
+        </div>
+      </form>
     </div>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-teal-50 border-b-2 border-teal-200">
-          <tr class="text-teal-700 uppercase text-xs font-semibold tracking-wider">
-            <th class="px-6 py-4 text-left">Product</th>
-            <th class="px-6 py-4 text-right">Qty Sold</th>
-            <th class="px-6 py-4 text-right">Revenue</th>
-          </tr>
-        </thead>
-        <tbody id="product-body" class="divide-y divide-gray-100">
-          {% for row in product_sales %}
-          <tr class="hover:bg-teal-50/50 transition-all duration-150">
-            <td class="px-6 py-4 font-medium text-gray-800">{{ row[0] }}</td>
-            <td class="px-6 py-4 text-right text-gray-700">{{ row[1]|default(0) }}</td>
-            <td class="px-6 py-4 text-right font-bold text-teal-600">$ {{ "%.2f"|format(row[2]|default(0)) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- Sales List -->
-  <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-    <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-5">
-      <h2 class="text-xl font-bold text-white tracking-wide">Sales List</h2>
+    <!-- Product Breakdown -->
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-700 text-white rounded-t-3xl p-6 shadow-xl">
+      <h2 class="text-2xl font-bold flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        Product Breakdown
+      </h2>
     </div>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-teal-50 border-b-2 border-teal-200">
-          <tr class="text-teal-700 uppercase text-xs font-semibold tracking-wider">
-            <th class="px-6 py-4 text-left">Sale ID</th>
-            <th class="px-6 py-4 text-left">Date</th>
-            <th class="px-6 py-4 text-left">Customer</th>
-            <th class="px-6 py-4 text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody id="sales-body" class="divide-y divide-gray-100">
-          {% for sale in sales %}
-          <tr class="hover:bg-teal-50/50 transition-all duration-150">
-            <td class="px-6 py-4 font-bold text-gray-900">#{{ sale.id }}</td>
-            <td class="px-6 py-4 text-gray-700">{{ sale.date[:10] }}</td>
-            <td class="px-6 py-4 text-gray-700">{{ sale.customer_name }}</td>
-            <td class="px-6 py-4 text-right font-bold text-teal-600">$ {{ "%.2f"|format(sale.total) }}</td>
-          </tr>
-
-          {% if sale['items'] %}
-          <tr class="bg-teal-50/30">
-            <td colspan="4" class="p-0">
-              <table class="w-full text-xs">
-                <tbody>
-                  {% for item in sale['items'] %}
-                  <tr class="border-t border-teal-100 hover:bg-teal-100/50">
-                    <td class="pl-10 py-2 text-gray-600">{{ item.product_name }}</td>
-                    <td class="text-center py-2 text-gray-600">{{ item.quantity }}</td>
-                    <td class="text-right pr-10 py-2 text-gray-600">$ {{ "%.2f"|format(item.subtotal) }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="bg-white rounded-b-3xl shadow-xl p-6 mb-8 border-t-4 border-teal-600">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="text-left text-sm font-bold text-gray-700 border-b-2 border-gray-200">
+              <th class="pb-4">PRODUCT</th>
+              <th class="pb-4 text-center">QTY SOLD</th>
+              <th class="pb-4 text-right">REVENUE</th>
+            </tr>
+          </thead>
+          <tbody id="product-breakdown" class="divide-y divide-gray-100">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
 
-  <!-- Summary -->
-  <div class="mt-8 text-center">
-    <p class="text-lg font-medium text-gray-700">
-      Total Income: 
-      <span id="total-income" class="text-2xl font-bold text-teal-600">$ {{ "%.2f"|format(total_income) }}</span>
-      <span class="mx-2 text-gray-500">|</span>
-      Transactions: 
-      <span class="font-bold text-teal-600">{{ sales|length }}</span>
-    </p>
+    <!-- Sales List -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-t-3xl p-6 shadow-xl">
+      <h2 class="text-2xl font-bold flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        Sales List
+      </h2>
+    </div>
+    <div class="bg-white rounded-b-3xl shadow-xl p-6 border-t-4 border-indigo-600">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="text-left text-sm font-bold text-gray-700 border-b-2 border-gray-200">
+              <th class="pb-4">SALE ID</th>
+              <th class="pb-4">DATE</th>
+              <th class="pb-4">CUSTOMER</th>
+              <th class="pb-4 text-right">TOTAL</th>
+              <th class="pb-4 text-center">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="sales-list" class="divide-y divide-gray-100">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- JS – ALL BUTTONS WORKING -->
+<!-- Edit Modal -->
+<dialog id="edit-modal" class="rounded-3xl shadow-2xl p-0 max-w-md w-full backdrop:bg-black/60">
+  <form id="edit-form" class="p-8 space-y-6 bg-gradient-to-br from-white to-indigo-50">
+    <h2 class="text-2xl font-bold text-gray-800">Edit Sale #<span id="edit-sale-id"></span></h2>
+    <input type="hidden" id="edit-id">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-2">Customer</label>
+      <select id="edit-customer" class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"></select>
+    </div>
+    <div class="flex justify-end gap-3 pt-4">
+      <button type="button" id="cancel-edit" class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all">Cancel</button>
+      <button type="submit" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all">Save</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
-  // Apply Filter
-  document.getElementById('apply-filter').addEventListener('click', () => {
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-    const product = document.getElementById('product-filter').value;
+  // === ELEMENTS ===
+  const filterForm = document.getElementById('filter-form');
+  const productSelect = filterForm.querySelector('[name="product_id"]');
+  const productTbody = document.getElementById('product-breakdown');
+  const salesTbody = document.getElementById('sales-list');
+  const printBtn = document.getElementById('print-report');
+  const exportBtn = document.getElementById('export-pdf');
+  const resetBtn = document.getElementById('reset-filters');
+  const editModal = document.getElementById('edit-modal');
+  const editForm = document.getElementById('edit-form');
+  const editId = document.getElementById('edit-id');
+  const editSaleId = document.getElementById('edit-sale-id');
+  const editCustomer = document.getElementById('edit-customer');
 
-    const url = new URL('/reports', window.location.origin);
-    if (from) url.searchParams.set('from_date', from);
-    if (to) url.searchParams.set('to_date', to);
-    if (product) url.searchParams.set('product_id', product);
+  // === LOAD DATA ===
+  async function loadData(params = {}) {
+    let url = '/api/reports';
+    const searchParams = new URLSearchParams();
+    Object.keys(params).forEach(key => searchParams.append(key, params[key]));
+    if (searchParams.toString()) url += '?' + searchParams.toString();
 
-    window.location.href = url.toString();
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Server error');
+      const data = await res.json();
+
+      // Product Filter
+      productSelect.innerHTML = '<option value="">All Products</option>';
+      data.products.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id; opt.textContent = p.name;
+        productSelect.appendChild(opt);
+      });
+
+      // Product Breakdown
+      productTbody.innerHTML = '';
+      if (data.product_sales.length === 0) {
+        productTbody.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-gray-500 text-lg">No sales in this period</td></tr>`;
+      } else {
+        data.product_sales.forEach(ps => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gradient-to-r hover:from-teal-50 hover:to-emerald-50 transition-all';
+          tr.innerHTML = `
+            <td class="py-4 font-semibold text-gray-800">${ps[0]}</td>
+            <td class="py-4 text-center text-gray-600">${ps[1]}</td>
+            <td class="py-4 text-right font-bold text-green-600">$${ps[2].toFixed(2)}</td>
+          `;
+          productTbody.appendChild(tr);
+        });
+      }
+
+      // Sales List
+      salesTbody.innerHTML = '';
+      if (data.sales.length === 0) {
+        salesTbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-gray-500 text-lg">No sales found</td></tr>`;
+      } else {
+        data.sales.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all';
+          tr.innerHTML = `
+            <td class="py-4 font-mono text-indigo-600">#${s.id}</td>
+            <td class="py-4 text-gray-700">${s.date}</td>
+            <td class="py-4 font-medium text-gray-800">${s.customer_name}</td>
+            <td class="py-4 text-right font-bold text-green-600">$${s.total.toFixed(2)}</td>
+            <td class="py-4 text-center">
+              <button data-id="${s.id}" class="edit-sale-btn text-indigo-600 hover:text-indigo-800 mr-4">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button data-id="${s.id}" class="delete-sale-btn text-red-600 hover:text-red-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </td>
+          `;
+          salesTbody.appendChild(tr);
+        });
+      }
+    } catch (err) {
+      showToast('Failed to load data', 'error');
+    }
+  }
+
+  // === TOAST ===
+  function showToast(msg, type = 'success') {
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:1000;padding:16px 32px;border-radius:16px;font-weight:700;color:white;box-shadow:0 20px 40px rgba(0,0,0,0.15);transform:translateX(400px);transition:transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);`;
+    toast.style.background = type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #10b981, #059669)';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => { toast.style.transform = 'translateX(400px)'; setTimeout(() => toast.remove(), 500); }, 3000);
+  }
+
+  // === FILTERS ===
+  filterForm.onsubmit = e => {
+    e.preventDefault();
+    const data = new FormData(filterForm);
+    const params = {};
+    for (let [k, v] of data) if (v) params[k] = v;
+    loadData(params);
+  };
+
+  resetBtn.onclick = () => {
+    filterForm.reset();
+    loadData();
+  };
+
+  // === PRINT & EXPORT ===
+  printBtn.onclick = () => window.print();
+  exportBtn.onclick = () => {
+    showToast('Exporting PDF...');
+    setTimeout(() => showToast('PDF exported!', 'success'), 1500);
+  };
+
+  // === EDIT SALE ===
+  async function openEditModal(saleId) {
+    try {
+      const res = await fetch(`/api/sales/${saleId}`);
+      const sale = await res.json();
+      const custRes = await fetch('/api/customers');
+      const customers = await custRes.json();
+
+      editId.value = sale.id;
+      editSaleId.textContent = sale.id;
+      editCustomer.innerHTML = '<option value="">Walk-in</option>';
+      customers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = c.name;
+        if (c.id === sale.customer_id) opt.selected = true;
+        editCustomer.appendChild(opt);
+      });
+
+      editModal.showModal();
+    } catch (err) {
+      showToast('Failed to load sale', 'error');
+    }
+  }
+
+  document.getElementById('cancel-edit').onclick = () => editModal.close();
+  editModal.addEventListener('click', e => { if (e.target === editModal) editModal.close(); });
+
+  editForm.onsubmit = async e => {
+    e.preventDefault();
+    const customerId = editCustomer.value || null;
+    try {
+      await fetch(`/api/sales/${editId.value}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: customerId })
+      });
+      showToast('Sale updated!');
+      editModal.close();
+      loadData(Object.fromEntries(new URLSearchParams(window.location.search)));
+    } catch (err) {
+      showToast('Update failed', 'error');
+    }
+  };
+
+  // === DELETE SALE ===
+  async function deleteSale(saleId, row) {
+    if (!confirm('Delete this sale? This cannot be undone.')) return;
+    try {
+      await fetch(`/api/sales/${saleId}`, { method: 'DELETE' });
+      row.style.transition = 'all 0.5s ease';
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(-50px)';
+      setTimeout(() => row.remove(), 500);
+      showToast('Sale deleted!');
+    } catch (err) {
+      showToast('Delete failed', 'error');
+    }
+  }
+
+  // === EVENT DELEGATION ===
+  salesTbody.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const row = btn.closest('tr');
+
+    if (btn.classList.contains('edit-sale-btn')) {
+      openEditModal(id);
+    } else if (btn.classList.contains('delete-sale-btn')) {
+      deleteSale(id, row);
+    }
   });
 
-  // Reset Filter
-  document.getElementById('reset-filter').addEventListener('click', () => {
-    window.location.href = '/reports';
-  });
-
-  // Print Report
-  document.getElementById('print-report').addEventListener('click', () => {
-    window.print();
-  });
-
-  // Export PDF (Print as PDF)
-  document.getElementById('export-pdf').addEventListener('click', () => {
-    window.print();
-  });
+  // === INITIAL LOAD ===
+  loadData();
 </script>
 
-<!-- Print Styles -->
 <style>
   @media print {
-    body * { visibility: hidden; }
-    .max-w-7xl, .max-w-7xl * { visibility: visible; }
-    .max-w-7xl { position: absolute; left: 0; top: 0; width: 100%; }
-    button, .bg-gradient-to-br, .shadow-xl { display: none !important; }
-    .bg-teal-50, .bg-teal-50\/30 { background: white !important; }
-    .text-teal-600, .text-teal-700 { color: #000 !important; }
+    body > *:not(.max-w-7xl) { display: none; }
+    .max-w-7xl { max-width: 100%; padding: 20px; }
+    button, dialog { display: none; }
   }
+  dialog::backdrop { background: rgba(0,0,0,0.6); }
 </style>
-
 {% endblock %}

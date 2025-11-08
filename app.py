@@ -387,6 +387,55 @@ def reports():
         selected_product=product_id
     )
 
+@app.route('/api/reports')
+def api_reports():
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+    product_id = request.args.get('product_id')
+
+    # === SALES QUERY ===
+    sales_query = Sale.query.options(
+        joinedload(Sale.customer),
+        joinedload(Sale.items).joinedload(SaleItem.product)
+    )
+    if from_date:
+        sales_query = sales_query.filter(Sale.date >= from_date)
+    if to_date:
+        sales_query = sales_query.filter(Sale.date <= to_date + " 23:59:59")
+    sales = sales_query.order_by(Sale.date.desc()).all()
+
+    # === PRODUCT BREAKDOWN ===
+    prod_query = db.session.query(
+        Product.name,
+        func.coalesce(func.sum(SaleItem.quantity), 0).label('qty'),
+        func.coalesce(func.sum(SaleItem.quantity * SaleItem.price), 0).label('revenue')
+    ).join(SaleItem).join(Sale)
+    if from_date:
+        prod_query = prod_query.filter(Sale.date >= from_date)
+    if to_date:
+        prod_query = prod_query.filter(Sale.date <= to_date + " 23:59:59")
+    if product_id:
+        prod_query = prod_query.filter(Product.id == int(product_id))
+    product_sales = prod_query.group_by(Product.id).all()
+
+    # === ALL PRODUCTS FOR FILTER ===
+    products = Product.query.all()
+
+    return jsonify({
+        "sales": [{
+            "id": s.id,
+            "date": s.date.strftime("%Y-%m-%d") if s.date else "No Date",
+            "customer_name": s.customer.name if s.customer else "Walk-in",
+            "total": float(s.total),
+            "customer_id": s.customer.id if s.customer else None
+        } for s in sales],
+        "product_sales": [
+            [ps.name, int(ps.qty), round(float(ps.revenue), 2)]
+            for ps in product_sales
+        ],
+        "products": [{"id": p.id, "name": p.name} for p in products]
+    })
+
 @app.route('/export_excel')
 def export_excel():
     from_date = request.args.get('from_date')
